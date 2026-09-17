@@ -1,34 +1,30 @@
-require("dotenv").config();
-const express = require("express");
-const path = require("path");
-const db = require("./config/connection");
+require('dotenv').config();
 
-// Import routes directly
-const exerciseRoutes = require("./server/routes/exercise-routes");
-const userRoutes = require("./server/routes/user-routes");
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./config/database');
 
-const PORT = process.env.PORT || 3001;
+const authRoutes = require('./routes/authRoutes');
+const workoutRoutes = require('./routes/workoutRoutes');
+const goalRoutes = require('./routes/goalRoutes');
+
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use(express.json());
 
-// Serve static files in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
-}
+app.use('/api/auth', authRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/goals', goalRoutes);
 
-// API routes
-app.use("/api/exercise", exerciseRoutes);
-app.use("/api/user", userRoutes);
+const PORT = process.env.PORT || 5000;
 
-// Optional: serve React app for unmatched routes
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../client/build/index.html'));
-// });
-
-db.once("open", () => {
-  app.listen(PORT, () => {
-    console.log(`API server running on port ${PORT}!`);
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Database connection failed:', error.message);
   });
-});
